@@ -626,24 +626,36 @@ function sendAllSettings() {
 	
 
 
-    function downloadPresets() {
-      const allPresets = {};
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith("preset_")) {
-        allPresets[key] = localStorage.getItem(key);
-        }
-       });
-
-      const blob = new Blob([JSON.stringify(allPresets, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "VectorMixTWO_presets.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+ function downloadPresets() {
+  const allPresets = {};
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith("preset_")) {
+      allPresets[key] = localStorage.getItem(key);
     }
+  });
+
+  if (Object.keys(allPresets).length === 0) {
+    alert("No presets to download.");
+    return;
+  }
+
+  const json = JSON.stringify(allPresets, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+
+  // Create a download link and click it
+  const a = document.createElement("a");
+  a.setAttribute("href", URL.createObjectURL(blob));
+  a.setAttribute("download", "VectorMixTWO_presets.json");
+
+  // Make sure it's visible in DOM before clicking
+  document.body.appendChild(a);
+  a.click();
+
+  // Cleanup
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
     function uploadPresets(event) {
       const file = event.target.files[0];
       if (!file) return;
