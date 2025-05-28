@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MIDI Joystick Config Tool</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 1.5em;
+    }
+
+    /* ✅ Add this */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    #header img {
+      max-height: 60px;
+      width: auto;
+    }
+
+
+    button {
+      margin: 4px;
+    }
+
+    label {
+      display: inline-block;
+      width: 160px;
+    }
+
+    .row {
+      margin-bottom: 10px;
+    }
+
+    .ccRow {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .ccLabel {
+      width: 60px;
+      font-size: 0.85em;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+
+    .bar {
+      height: 12px;
+      background: limegreen;
+      width: 0%;
+      transition: width 0.1s ease;
+      color: black;
+      font-size: 0.75em;
+      text-align: right;
+      padding-right: 4px;
+    }
+
+    #mainContainer {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    #controlsColumn {
+      flex: 1 1 400px;
+      min-width: 300px;
+    }
+
+
+    #serialColumn {
+      flex: 1 1 400px;
+      min-width: 300px;
+    }
+
+    #serialLog {
+      background: #111;
+      color: #0f0;
+      font-family: monospace;
+      padding: 10px;
+      height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #444;
+    }
+    #midiMonitor {
+      width: 100%;
+      max-width: 100%;
+    }
+	#dryMeta {
+  font-size: 0.75em;
+  color: #444;
+}
+
+
+
+  </style>
+</head>
+<body>
+
+  <input type="checkbox" id="liveModeFlag" style="display: none;">
+
+<div id="header">
+  <img src="https://img1.wsimg.com/isteam/ip/bce99fc7-cd01-4ec0-8b5f-a6a0561d0be9/logo.png/:/rs=w:118,h:100,cg:true,m/cr=w:118,h:100" alt="Logo">
+  <h1>Vector MIX TWO Joystick Config Tool</h1>
+</div>
+
+
+  <div id="mainContainer">
+    <div id="controlsColumn">
+
+      <div class="row">
+        <button onClick="connectSerial()">Connect Serial</button>
+        <button onClick="disconnectSerial()">Disconnect Serial</button>
+        <button onClick="connectMIDI()">Connect MIDI</button>
+        <button onClick="disconnectMIDI()">Disconnect MIDI</button>
+      </div>
+
+      <div class="row">
+        <button onClick="sendLine('REPORT')">GET REPORT</button>
+        <button onClick="sendAllSettings()">Set All</button>
+        <button onClick="setLiveMode(true)">Live Mode</button>
+        <button onClick="setLiveMode(false)">Preset Mode</button>
+
+      </div>
+      <div id="reportStatus" style="color: green; margin-top: 10px;"></div>
+	  <div id="saveStatus" style="color: blue; font-weight: bold; margin-top: 5px;"></div>
+
+
+      <div class="row">
+        <label>Vector Channel:</label>
+        <input type="number" id="joyChan" min="1" max="16">
+        <button onClick="setJoystickChan()">Set</button>
+      </div>
+
+      <div class="row">
+        <label>Vector Mode Pot 1 (Gain)Channel:</label>
+        <input type="number" id="potGainChan" min="1" max="16">
+        <button onClick="sendLine('SET POT1 CH ' + document.getElementById('potGainChan').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>Vector Mode Pot 2 (Radius)Channel:</label>
+        <input type="number" id="potRadiusChan" min="1" max="16">
+        <button onClick="sendLine('SET POT2 CH ' + document.getElementById('potRadiusChan').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>TRI/Quad Channel:</label>
+        <input type="number" id="quadChan" min="1" max="16">
+        <button onClick="sendLine('SET QUAD CHAN ' + document.getElementById('quadChan').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>TRI/Quad CC1:</label>
+        <input type="number" id="quadCC1" min="0" max="127">
+        <button onClick="sendLine('SET QUAD CC1 ' + document.getElementById('quadCC1').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>TRI/Quad CC2:</label>
+        <input type="number" id="quadCC2" min="0" max="127">
+        <button onClick="sendLine('SET QUAD CC2 ' + document.getElementById('quadCC2').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>TRI/Quad CC3:</label>
+        <input type="number" id="quadCC3" min="0" max="127">
+        <button onClick="sendLine('SET QUAD CC3 ' + document.getElementById('quadCC3').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>Quad CC4:</label>
+        <input type="number" id="quadCC4" min="0" max="127">
+        <button onClick="sendLine('SET QUAD CC4 ' + document.getElementById('quadCC4').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>Radius:</label>
+        <input type="number" id="radiusInput" step="1" min="50" max="900"
+          title="Enter a value between 50 and 900 for Influance Radius.">
+        <button onClick="sendLine('SET RADIUS ' + document.getElementById('radiusInput').value)">Set</button>
+      </div>
+
+       <div class="row">
+      <label>Center Zone (-5 to 5)   Zero = off :</label>
+      <input type="number" id="deadzoneInput" min="-5" max="5" step="0.1" value="0" />
+      <button onClick="sendCenterZone()">Set</button>
+      </div>
+		
+      <div class="row">
+        <label>Gain:</label>
+        <input type="number" id="gainInput" step="0.1" min="0.0" max="4.0"
+          title="Enter a value between 0.0 and 4.0 for gain intensity.">
+        <button onClick="sendLine('SET GAIN ' + document.getElementById('gainInput').value)">Set</button>
+      </div>
+
+      <div class="row">
+        <label>Joystick Function:</label>
+        <select id="modeSelect">
+          <option value="VECTOR">VECTOR</option>
+          <option value="TRIADIC">TRIADIC</option>
+          <option value="QUAD">QUAD</option>
+        </select>
+        <button onClick="setMode()">Set</button>
+      </div>
+<div class="row" style="align-items: center;">
+  <label>Dry Center Blend:</label>
+  <input type="checkbox" id="dryToggle" onChange="toggleDryCenter()">
+
+  <span id="dryMeta" style="font-size: 0.75em; color: #444; margin-left: 12px;">
+    <span id="dryChanInfo">Chan: -</span>,
+    <span id="dryCCInfo">CC: -</span>
+  </span>
+
+  <span id="dryControls" style="display:none; margin-left: 20px;">
+    Min: <input type="number" id="dryMin" min="0" max="127" style="width:50px;">
+    <button onClick="sendDryMin()">Send</button>
+    Max: <input type="number" id="dryMax" min="0" max="127" style="width:50px;">
+    <button onClick="sendDryMax()">Send</button>
+  </span>
+</div>
+
+
+      <div class="row">
+        <label>Presets:</label>
+        <select id="presetSelect"></select>
+        <input type="text" id="presetName" placeholder="New preset name">
+        <button onClick="savePreset()">Save</button>
+        <button onClick="loadPreset()">Load</button>
+        <button onClick="deletePreset()">Delete</button>
+        <button onClick="downloadPresets()">Download Presets</button>
+        <input type="file" id="uploadInput" accept=".json" style="display:none" onChange="uploadPresets(event)">
+        <button onClick="document.getElementById('uploadInput').click()">Upload Presets</button>
+      </div>
+
+
+    </div> <!-- end of controlsColumn -->
+
+    <div id="serialColumn">
+      <h3>Serial Console</h3>
+      <pre id="serialLog"></pre>
+    </div>
+
+  </div> <!-- end of mainContainer -->
+
+  <!-- Full-width MIDI CC Activity monitor -->
+  <div class="row" style="margin-top: 20px;">
+    <h3>Live MIDI CC Activity</h3>
+    <div id="midiMonitor"></div>
+	
+
+  </div>
+
+
+  <script>
+    let suppressDryToggle = false;
+    let serialPort, midiAccess, midiInput, writer;
+    const ccTimeouts = {};
+	let serialBuffer = "";
+
+  function log(text) {
+  const logBox = document.getElementById("serialLog");
+  logBox.textContent += text + "\n";
+  logBox.scrollTop = logBox.scrollHeight;
+
+  if (text.startsWith("Joystick Channel: ")) {
+    document.getElementById("joyChan").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Pot Gain CC: ")) {
+    document.getElementById("potGainChan").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Pot Radius CC: ")) {
+    document.getElementById("potRadiusChan").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Quad Channel: ")) {
+    document.getElementById("quadChan").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Quad CC1: ")) {
+    document.getElementById("quadCC1").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Quad CC2: ")) {
+    document.getElementById("quadCC2").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Quad CC3: ")) {
+    document.getElementById("quadCC3").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Quad CC4: ")) {
+    document.getElementById("quadCC4").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Radius: ")) {
+    document.getElementById("radiusInput").value = parseFloat(text.split(": ")[1]);
+  } else if (text.startsWith("Center Zone Level: ")) {
+    document.getElementById("deadzoneInput").value = parseFloat(text.split(": ")[1]);
+  } else if (text.startsWith("Gain: ")) {
+    document.getElementById("gainInput").value = parseFloat(text.split(": ")[1]);
+
+    // Extra check — if the gain value matches current input, show confirmation
+    if (text === "Gain: " + document.getElementById("gainInput").value) {
+      setTimeout(() => {
+        const status = document.getElementById("reportStatus");
+        status.innerText = "Live settings captured to EEPROM — ready to save as preset.";
+        setTimeout(() => status.innerText = "", 3000);
+      }, 100);
+    }
+  } else if (text.startsWith("Mode: ")) {
+    const mode = text.split(": ")[1].trim();
+    document.getElementById("modeSelect").value = mode;
+    updateDryUIVisibility(mode);  // ✅ dynamically show/hide dry UI
+
+  } else if (text.startsWith("Dry Center CC Enabled: ")) {
+    const enabled = text.includes("YES");
+    const dryToggle = document.getElementById("dryToggle");
+
+    suppressDryToggle = true;
+    dryToggle.checked = enabled;
+    toggleDryCenter();  // now it only updates UI
+    suppressDryToggle = false;
+   }
+   else if (text.startsWith("Dry Channel: ")) {
+    document.getElementById("dryChanInfo").innerText = "Chan: " + text.split(": ")[1];
+  } else if (text.startsWith("Dry CC: ")) {
+    document.getElementById("dryCCInfo").innerText = "CC: " + text.split(": ")[1];
+  } else if (text.startsWith("Dry Min Value: ")) {
+    document.getElementById("dryMin").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Dry Max Value: ")) {
+    document.getElementById("dryMax").value = parseInt(text.split(": ")[1]);
+  } else if (text.startsWith("Live Mode: ")) {
+    const isLive = text.includes("ON");
+    document.getElementById("liveModeFlag").checked = isLive;
+  } else if (text === "DONE") {
+    const status = document.getElementById("saveStatus");
+    if (status) {
+      status.innerText = "EEPROM save complete.";
+      setTimeout(() => status.innerText = "", 4000);
+    }
+  }
+}
+
+	 
+    function setLiveMode(live) {
+      document.getElementById("liveModeFlag").checked = live;
+      sendLine(live ? "MODE LIVE" : "MODE PRESET");
+    }
+
+
+async function connectSerial() {
+  if (!("serial" in navigator)) {
+    alert("Web Serial API not supported in this browser.");
+    return;
+  }
+
+  try {
+    serialPort = await navigator.serial.requestPort();
+    await serialPort.open({ baudRate: 115200 });
+
+    const decoder = new TextDecoderStream();
+    const inputDone = serialPort.readable.pipeTo(decoder.writable);
+    const inputStream = decoder.readable;
+
+    const reader = inputStream.getReader();
+    writer = serialPort.writable.getWriter();
+
+    log("Serial connected.");
+
+    // Continuously read incoming lines
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) {
+        serialBuffer += value;
+      let lines = serialBuffer.split('\n');
+      serialBuffer = lines.pop(); // Save incomplete line
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line) log(line);
+       }
+
+      }
+    }
+
+    await reader.releaseLock();
+    await inputDone;
+
+    } catch (err) {
+    log("Serial error: " + err);
+      }
+    }
+
+
+      async function disconnectSerial() {
+        try {
+          if (writer) {
+            await writer.close?.();  // Optional chaining in case close exists
+            writer.releaseLock();
+            writer = null;
+          }
+          if (serialPort) {
+            await serialPort.close();
+            serialPort = null;
+          }
+        } catch (e) {
+          console.error("Error while disconnecting:", e);
+        }
+       log("Serial disconnected.");
+      }
+
+
+
+    async function connectMIDI() {
+      try {
+        midiAccess = await navigator.requestMIDIAccess();
+        for (let input of midiAccess.inputs.values()) {
+          input.onmidimessage = handleMIDI;
+        }
+        log("MIDI connected.");
+      } catch (err) {
+        log("MIDI error: " + err);
+      }
+    }
+
+    function disconnectMIDI() {
+      if (midiAccess) {
+        for (let input of midiAccess.inputs.values()) {
+          input.onmidimessage = null;
+        }
+        log("MIDI disconnected.");
+      }
+	  clearMidiMonitor();
+    }
+
+    function handleMIDI(event) {
+      if (event.data[0] >= 0xB0 && event.data[0] <= 0xBF) {
+        const cc = event.data[1];
+        const value = event.data[2];
+        showCCActivity(cc, value);
+      }
+    }
+
+    function showCCActivity(cc, value) {
+      const monitor = document.getElementById("midiMonitor");
+      let row = document.getElementById("ccRow" + cc);
+      if (!row) {
+        row = document.createElement("div");
+        row.id = "ccRow" + cc;
+        row.className = "ccRow";
+
+        const label = document.createElement("div");
+        label.className = "ccLabel";
+        label.innerText = "CC " + cc;
+
+        const bar = document.createElement("div");
+        bar.id = "cc" + cc;
+        bar.className = "bar";
+
+        row.appendChild(label);
+        row.appendChild(bar);
+        monitor.appendChild(row);
+      }
+
+      const bar = document.getElementById("cc" + cc);
+      bar.style.width = (value * 100 / 127) + "%";
+      bar.innerText = value;
+    }
+
+       function sendLine(text) {
+      if (writer) {
+        writer.write(new TextEncoder().encode(text + "\n"));
+        log("> " + text);
+      } else {
+        console.log("Serial not connected.");
+      }
+    }
+
+
+    function setJoystickChan() {
+      const chan = document.getElementById("joyChan").value;
+      if (chan >= 1 && chan <= 16) {
+        sendLine("SET CHAN " + chan);
+      }
+    }
+
+    function setMode() {
+      const mode = document.getElementById("modeSelect").value;
+      sendLine("SET MODE " + mode);
+	  clearMidiMonitor();
+    updateDryUIVisibility(mode);
+    }
+
+    function savePreset() {
+      const name = document.getElementById("presetName").value.trim();
+      if (!name) return alert("Enter a name for the preset.");
+      const fields = [
+        'joyChan', 'potGainChan', 'potRadiusChan', 'quadChan',
+        'quadCC1', 'quadCC2', 'quadCC3', 'quadCC4',
+        'radiusInput', 'deadzoneInput', 'gainInput', 'modeSelect',
+		'dryToggle', 'dryMin', 'dryMax', 'liveModeFlag'
+		
+
+      ];
+      const preset = {};
+      fields.forEach(id => preset[id] = document.getElementById(id).value);
+	  preset.dryToggle = document.getElementById("dryToggle").checked.toString();
+      localStorage.setItem("preset_" + name, JSON.stringify(preset));
+      updatePresetDropdown();
+	  document.getElementById("presetSelect").value = name; // ✅ Auto-select saved preset
+      alert("Preset saved: " + name);
+    }
+
+    function loadPreset() {
+      const name = document.getElementById("presetSelect").value;
+      if (!name) return;
+      const preset = JSON.parse(localStorage.getItem("preset_" + name));
+      if (!preset) return alert("Preset not found.");
+      for (const [id, val] of Object.entries(preset)) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+
+ 	 if (el.type === "checkbox") {
+ 	   el.checked = (val === "true");
+ 	 } else {
+ 	   el.value = val;
+ 	 }
+	}
+    updateDryUIVisibility(preset["modeSelect"]);  // ✅ Visually apply mode effects
+	  // Always start by forcing PRESET mode
+	sendLine("MODE PRESET");
+	document.getElementById("liveModeFlag").checked = false;
+
+	  
+	  // Restore dry toggle and send appropriate command
+     const dryToggle = document.getElementById("dryToggle");
+     if (dryToggle.checked) {
+       sendLine("SET DRY ON");
+	   toggleDryCenter();
+     } else {
+       sendLine("SET DRY OFF");
+     }
+	  sendAllSettings();
+      alert("Preset loaded: " + name);
+	  clearMidiMonitor();
+    }
+
+    function deletePreset() {
+      const name = document.getElementById("presetSelect").value;
+      if (!name) return alert("No preset selected to delete.");
+
+      const confirmed = confirm(`Are you sure you want to delete the preset "${name}"?`);
+      if (!confirmed) return;
+
+      localStorage.removeItem("preset_" + name);
+      updatePresetDropdown();
+      alert(`Preset "${name}" deleted.`);
+    }
+
+
+    function updatePresetDropdown() {
+      const dropdown = document.getElementById("presetSelect");
+      dropdown.innerHTML = "";
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("preset_")) {
+          const name = key.replace("preset_", "");
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        }
+      });
+    }
+
+function sendAllSettings() {
+  const cmds = [
+    `SET CHAN ${document.getElementById("joyChan").value}`,
+    `SET POT1 CH ${document.getElementById("potGainChan").value}`,
+    `SET POT2 CH ${document.getElementById("potRadiusChan").value}`,
+    `SET QUAD CHAN ${document.getElementById("quadChan").value}`,
+    `SET QUAD CC1 ${document.getElementById("quadCC1").value}`,
+    `SET QUAD CC2 ${document.getElementById("quadCC2").value}`,
+    `SET QUAD CC3 ${document.getElementById("quadCC3").value}`,
+    `SET QUAD CC4 ${document.getElementById("quadCC4").value}`,
+    `SET RADIUS ${document.getElementById("radiusInput").value}`,
+    `SET CENTERZONE ${document.getElementById("deadzoneInput").value}`,
+    `SET GAIN ${document.getElementById("gainInput").value}`,
+    `SET MODE ${document.getElementById("modeSelect").value}`,
+    document.getElementById("dryToggle").checked ? "SET DRY ON" : "SET DRY OFF",
+    `SET DRY MIN ${document.getElementById("dryMin").value}`,
+    `SET DRY MAX ${document.getElementById("dryMax").value}`,
+  ];
+
+  // Include live/preset mode first
+  if (document.getElementById("liveModeFlag").checked) {
+    sendLine("MODE LIVE");
+  } else {
+    sendLine("MODE PRESET");
+  }
+
+  // Queue each command with a delay
+  let delay = 0;
+  cmds.forEach((cmd, i) => {
+    setTimeout(() => {
+      sendLine(cmd);
+    }, delay);
+    delay += 100;  // ⏱️ 100ms between each command (tweak as needed)
+  });
+
+  setTimeout(() => {
+    const reportStatus = document.getElementById("reportStatus");
+    const saveStatus = document.getElementById("saveStatus");
+    if (reportStatus) {
+      reportStatus.innerText = "All settings sent.";
+      setTimeout(() => reportStatus.innerText = "", 3000);
+    }
+    if (saveStatus) {
+      saveStatus.innerText = "Settings saved to joystick EEPROM.";
+      setTimeout(() => saveStatus.innerText = "", 4000);
+    }
+  }, delay + 100);
+}
+
+
+	
+
+
+    function downloadPresets() {
+      const allPresets = {};
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("preset_")) {
+        allPresets[key] = localStorage.getItem(key);
+        }
+       });
+
+      const blob = new Blob([JSON.stringify(allPresets, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "VectorMixTWO_presets.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function uploadPresets(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        let imported = 0;
+      for (const [key, value] of Object.entries(data)) {
+        if (key.startsWith("preset_")) {
+          localStorage.setItem(key, value);
+          imported++;
+         }
+        }
+      updatePresetDropdown();
+      alert(`Imported ${imported} presets.`);
+    } catch (err) {
+      alert("Invalid preset file.");
+     }
+     };
+    reader.readAsText(file);
+     }
+
+      function sendCenterZone() {
+        const val = document.getElementById("deadzoneInput").value;
+        sendLine("SET CENTERZONE " + val);
+      }
+	  
+	  function toggleDryCenter() {
+     if (suppressDryToggle) return;  // 🚫 Skip during REPORT parsing
+
+     const checked = document.getElementById("dryToggle").checked;
+     document.getElementById("dryControls").style.display = checked ? "inline-block" : "none";
+     document.getElementById("dryMeta").style.display = checked ? "block" : "none";
+
+     sendLine(checked ? "SET DRY ON" : "SET DRY OFF");
+     }
+
+
+	  
+	  function sendDryMin() {
+        const val = parseInt(document.getElementById("dryMin").value);
+        if (val >= 0 && val <= 127) {
+          sendLine("SET DRY MIN " + val);
+        } else {
+          alert("Dry Min must be between 0 and 127");
+        }
+      }
+
+      function sendDryMax() {
+        const val = parseInt(document.getElementById("dryMax").value);
+        if (val >= 0 && val <= 127) {
+          sendLine("SET DRY MAX " + val);
+        } else {
+          alert("Dry Max must be between 0 and 127");
+        }
+      }
+
+   
+      function updateDryFromReport(lines) {
+        const dryEnabled = lines.find(line => line.startsWith("Dry Center CC Enabled:"));
+        if (dryEnabled) {
+          const isOn = dryEnabled.includes("YES");
+          document.getElementById('dryToggle').checked = isOn;
+          document.getElementById('dryMeta').style.display = isOn ? 'block' : 'none';
+        }
+
+        const chanLine = lines.find(line => line.startsWith("Dry Channel:"));
+	    const ccLine = lines.find(line => line.startsWith("Dry CC:"));
+ 	   if (chanLine) document.getElementById('dryChanInfo').innerText = chanLine;
+ 	   if (ccLine) document.getElementById('dryCCInfo').innerText = ccLine;
+        }
+      function clearMidiMonitor() {
+        const monitor = document.getElementById("midiMonitor");
+        monitor.innerHTML = ""; // clears all CC rows
+      }
+
+     function updateDryUIVisibility(mode) {
+       const isActive = (mode === "TRIADIC" || mode === "QUAD");
+       const dryToggle = document.getElementById("dryToggle");
+       const dryControls = document.getElementById("dryControls");
+       const dryMeta = document.getElementById("dryMeta");
+
+       // Hide all dry UI if mode is VECTOR
+       if (!isActive) {
+         dryToggle.checked = false;
+         dryControls.style.display = "none";
+         dryMeta.style.display = "none";
+         return;
+      }
+
+       // Otherwise show dry UI depending on toggle state
+       dryControls.style.display = dryToggle.checked ? "inline-block" : "none";
+       dryMeta.style.display = dryToggle.checked ? "block" : "none";
+      }
+
+
+
+window.onload = () => {
+  updatePresetDropdown();
+
+  const dryToggle = document.getElementById("dryToggle");
+  const dryControls = document.getElementById("dryControls");
+  const dryMeta = document.getElementById("dryMeta");
+
+  const enabled = dryToggle.checked;
+  dryControls.style.display = enabled ? "inline-block" : "none";
+  dryMeta.style.display = enabled ? "block" : "none";
+};
+
+
+  </script>
+
+</body>
+</html>
