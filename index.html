@@ -639,7 +639,9 @@ function sendAllSettings() {
       const a = document.createElement("a");
       a.href = url;
       a.download = "VectorMixTWO_presets.json";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
     function uploadPresets(event) {
