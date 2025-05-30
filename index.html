@@ -208,6 +208,23 @@
       </div>
 
       <div class="row">
+        <label title="Sets the maximum CC output value for TRIADIC/QUAD modes.">
+         Max Mix Output:
+         
+      </label>
+
+        <input
+         type="number"
+         id="maxOutInput"
+         min="1"
+         max="127"
+         title="Enter a value between 1 and 127.">
+        <button onClick="sendMaxOut()">Set</button>
+      </div>
+
+
+
+      <div class="row">
         <label>Joystick Function:</label>
         <select id="modeSelect">
           <option value="VECTOR">VECTOR</option>
@@ -271,7 +288,7 @@
     const ccTimeouts = {};
 	let serialBuffer = "";
 
-  function log(text) {
+function log(text) {
   const logBox = document.getElementById("serialLog");
   logBox.textContent += text + "\n";
   logBox.scrollTop = logBox.scrollHeight;
@@ -307,21 +324,21 @@
         setTimeout(() => status.innerText = "", 3000);
       }, 100);
     }
+  } else if (text.startsWith("Max CC Output: ")) {
+    document.getElementById("maxOutInput").value = parseInt(text.split(": ")[1]);
   } else if (text.startsWith("Mode: ")) {
     const mode = text.split(": ")[1].trim();
     document.getElementById("modeSelect").value = mode;
-    updateDryUIVisibility(mode);  // ✅ dynamically show/hide dry UI
-
+    updateDryUIVisibility(mode);
   } else if (text.startsWith("Dry Center CC Enabled: ")) {
     const enabled = text.includes("YES");
     const dryToggle = document.getElementById("dryToggle");
 
     suppressDryToggle = true;
     dryToggle.checked = enabled;
-    toggleDryCenter();  // now it only updates UI
+    toggleDryCenter();
     suppressDryToggle = false;
-   }
-   else if (text.startsWith("Dry Channel: ")) {
+  } else if (text.startsWith("Dry Channel: ")) {
     document.getElementById("dryChanInfo").innerText = "Chan: " + text.split(": ")[1];
   } else if (text.startsWith("Dry CC: ")) {
     document.getElementById("dryCCInfo").innerText = "CC: " + text.split(": ")[1];
@@ -340,6 +357,7 @@
     }
   }
 }
+
 
 	 
     function setLiveMode(live) {
@@ -484,6 +502,16 @@ async function connectSerial() {
         sendLine("SET CHAN " + chan);
       }
     }
+     
+    function sendMaxOut() {
+      const val = parseInt(document.getElementById("maxOutInput").value);
+      if (val >= 1 && val <= 127) {
+        sendLine("SET MAXOUT " + val);
+      } else {
+        alert("Max CC Output must be between 1 and 127.");
+      }
+    }
+
 
     function setMode() {
       const mode = document.getElementById("modeSelect").value;
@@ -498,8 +526,8 @@ async function connectSerial() {
       const fields = [
         'joyChan', 'potGainChan', 'potRadiusChan', 'quadChan',
         'quadCC1', 'quadCC2', 'quadCC3', 'quadCC4',
-        'radiusInput', 'deadzoneInput', 'gainInput', 'modeSelect',
-		'dryToggle', 'dryMin', 'dryMax', 'liveModeFlag'
+        'radiusInput', 'deadzoneInput', 'gainInput', 'maxOutInput', 
+        'modeSelect', 'dryToggle', 'dryMin', 'dryMax', 'liveModeFlag'
 		
 
       ];
@@ -586,6 +614,7 @@ function sendAllSettings() {
     `SET RADIUS ${document.getElementById("radiusInput").value}`,
     `SET CENTERZONE ${document.getElementById("deadzoneInput").value}`,
     `SET GAIN ${document.getElementById("gainInput").value}`,
+    `SET MAXOUT ${document.getElementById("maxOutInput").value}`,
     `SET MODE ${document.getElementById("modeSelect").value}`,
     document.getElementById("dryToggle").checked ? "SET DRY ON" : "SET DRY OFF",
     `SET DRY MIN ${document.getElementById("dryMin").value}`,
