@@ -50,11 +50,16 @@
     }
 
     .ccLabel {
-      width: 60px;
+      min-width: 70px;
       font-size: 0.85em;
       font-weight: bold;
       margin-right: 6px;
+      white-space: nowrap;       /* ✅ Prevent line break */
+      overflow: hidden;          /* ✅ Avoid overflow weirdness */
+      text-overflow: ellipsis;   /* ✅ (Optional) Add "..." if ever clipped */
     }
+
+
 
     .bar {
       height: 12px;
@@ -295,9 +300,9 @@ function log(text) {
 
   if (text.startsWith("Joystick Channel: ")) {
     document.getElementById("joyChan").value = parseInt(text.split(": ")[1]);
-  } else if (text.startsWith("Pot Gain CC: ")) {
+  } else if (text.startsWith("Pot Gain Chan: ")) {
     document.getElementById("potGainChan").value = parseInt(text.split(": ")[1]);
-  } else if (text.startsWith("Pot Radius CC: ")) {
+  } else if (text.startsWith("Pot Radius Chan: ")) {
     document.getElementById("potRadiusChan").value = parseInt(text.split(": ")[1]);
   } else if (text.startsWith("Quad Channel: ")) {
     document.getElementById("quadChan").value = parseInt(text.split(": ")[1]);
@@ -452,28 +457,32 @@ async function connectSerial() {
 	  clearMidiMonitor();
     }
 
-    function handleMIDI(event) {
-      if (event.data[0] >= 0xB0 && event.data[0] <= 0xBF) {
+     function handleMIDI(event) {
+      const statusByte = event.data[0];
+      if (statusByte >= 0xB0 && statusByte <= 0xBF) {
+        const channel = (statusByte & 0x0F) + 1; // MIDI channels are 1–16
         const cc = event.data[1];
         const value = event.data[2];
-        showCCActivity(cc, value);
+        showCCActivity(cc, value, channel);
       }
     }
 
-    function showCCActivity(cc, value) {
+
+    function showCCActivity(cc, value, channel) {
       const monitor = document.getElementById("midiMonitor");
-      let row = document.getElementById("ccRow" + cc);
+      let row = document.getElementById("ccRow" + cc + "_ch" + channel);
       if (!row) {
         row = document.createElement("div");
-        row.id = "ccRow" + cc;
+        row.id = "ccRow" + cc + "_ch" + channel;
         row.className = "ccRow";
 
         const label = document.createElement("div");
         label.className = "ccLabel";
-        label.innerText = "CC " + cc;
+        label.innerHTML = `CC ${cc} <span style="font-size: 0.7em; color: #666;">(Ch ${channel})</span>`;
+
 
         const bar = document.createElement("div");
-        bar.id = "cc" + cc;
+        bar.id = "cc" + cc + "_ch" + channel;
         bar.className = "bar";
 
         row.appendChild(label);
@@ -481,10 +490,11 @@ async function connectSerial() {
         monitor.appendChild(row);
       }
 
-      const bar = document.getElementById("cc" + cc);
+      const bar = document.getElementById("cc" + cc + "_ch" + channel);
       bar.style.width = (value * 100 / 127) + "%";
       bar.innerText = value;
     }
+
 
        function sendLine(text) {
       if (writer) {
